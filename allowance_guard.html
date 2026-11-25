@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allowance Guard – ผู้ช่วยจัดสรรเงินก้อนอัจฉริยะ (Fantasy Pink Edition)</title>
+    <!-- Google Fonts: Prompt & Mali สำหรับความละมุนสไตล์เทพนิยาย -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- QRCode.js สำหรับสร้าง QR Code PromptPay มาตรฐาน EMVCo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                        cute: ['Mali', 'cursive'],
+                    },
+                    animation: {
+                        'float': 'float 4s ease-in-out infinite',
+                        'twinkle': 'twinkle 2.5s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        twinkle: {
+                            '0%, 100%': { opacity: 0.3, transform: 'scale(0.85)' },
+                            '50%': { opacity: 1, transform: 'scale(1.25)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #fff0f6 0%, #f5e6ff 48%, #ffe4f1 100%);
+            min-height: 100vh;
+            color: #4a2545;
+            overflow-x: hidden;
+        }
+
+        /* เอฟเฟกต์ Glassmorphism สีชมพูพาสเทล ม่วงลาเวนเดอร์ ตัดขอบทองคำ */
+        .fantasy-card {
+            background: rgba(255, 255, 255, 0.84);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 2px solid rgba(255, 182, 213, 0.78);
+            box-shadow: 0 12px 32px -6px rgba(245, 46, 126, 0.14), 0 0 16px rgba(250, 204, 21, 0.18);
+            border-radius: 1.75rem;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .fantasy-card:hover {
+            box-shadow: 0 16px 38px -6px rgba(245, 46, 126, 0.22), 0 0 22px rgba(250, 204, 21, 0.32);
+            border-color: #facc15;
+        }
+
+        .gold-border {
+            border: 2px solid #facc15;
+            box-shadow: 0 0 18px rgba(250, 204, 21, 0.4);
+        }
+
+        .magic-btn {
+            background: linear-gradient(135deg, #ff5c9d 0%, #c084fc 100%);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.65);
+            box-shadow: 0 6px 20px rgba(245, 46, 126, 0.35);
+            transition: all 0.25s ease;
+        }
+
+        .magic-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 26px rgba(245, 46, 126, 0.5), 0 0 14px #fde047;
+        }
+
+        .magic-btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .gold-btn {
+            background: linear-gradient(135deg, #fde047 0%, #f59e0b 100%);
+            color: #4a2545;
+            font-weight: 700;
+            border: 2px solid #fef9c3;
+            box-shadow: 0 6px 18px rgba(234, 179, 8, 0.35);
+            transition: all 0.25s ease;
+        }
+
+        .gold-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(234, 179, 8, 0.55);
+        }
+
+        /* พื้นหลังปราสาทและดวงดาวระยิบระยับ */
+        .star-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            color: #facc15;
+            animation: twinkle 3s infinite ease-in-out;
+            user-select: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ffe4ee;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #ff99c0, #c084fc);
+            border-radius: 10px;
+        }
+
+        /* แถบเมนูนำทาง Active */
+        .nav-pill.active {
+            background: linear-gradient(135deg, #ff5c9d 0%, #a855f7 100%);
+            color: #ffffff;
+            border-color: #fde047;
+            box-shadow: 0 6px 18px rgba(245, 46, 126, 0.38);
+            transform: translateY(-2px);
+        }
+
+        /* Page Transition */
+        .page-section {
+            display: none;
+            animation: fadeInScale 0.35s ease-out forwards;
+        }
+        .page-section.active {
+            display: block;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: translateY(12px) scale(0.99);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+<body class="relative pb-24 md:pb-12">
+
+    <!-- พื้นหลังดวงดาววิบวับและเงาปราสาทเทพนิยายดิสนีย์ -->
+    <div class="star-bg" id="starContainer">
+        <svg class="fixed bottom-0 right-0 w-96 md:w-[540px] opacity-15 pointer-events-none" viewBox="0 0 500 350" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 350V220H90V350H50ZM410 350V220H450V350H410ZM120 350V170H170V350H120ZM330 350V170H380V350H330ZM190 350V120H310V350H190Z" fill="#ec4899"/>
+            <polygon points="70,170 45,220 95,220" fill="#a855f7"/>
+            <polygon points="430,170 405,220 455,220" fill="#a855f7"/>
+            <polygon points="145,110 115,170 175,170" fill="#f43f5e"/>
+            <polygon points="355,110 325,170 385,170" fill="#f43f5e"/>
+            <polygon points="250,30 185,120 315,120" fill="#9333ea"/>
+            <circle cx="250" cy="22" r="8" fill="#facc15"/>
+            <path d="M225 350V280C225 266.193 236.193 255 250 255C263.807 255 275 266.193 275 280V350H225Z" fill="#fff"/>
+        </svg>
+    </div>
+
+    <!-- กล่องแจ้งเตือนแบบเทพนิยาย (แทน alert/confirm) -->
+    <div id="magicToast" class="fixed top-5 right-5 z-50 transform translate-x-[150%] transition-transform duration-300 max-w-sm">
+        <div class="fantasy-card gold-border px-5 py-4 flex items-center gap-3 bg-white/95">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-pink-400 to-yellow-300 flex items-center justify-center text-white text-lg shrink-0 shadow">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+            </div>
+            <div>
+                <h4 id="toastTitle" class="font-bold text-pink-600 text-sm">เวทมนตร์สำเร็จ!</h4>
+                <p id="toastMessage" class="text-xs text-gray-600 mt-0.5">บันทึกข้อมูลเรียบร้อยแล้วค่ะ</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal เตือนสติ 2 ชั้นก่อนปลดล็อกหีบสมบัติฉุกเฉิน -->
+    <div id="emergencyModal" class="fixed inset-0 z-50 bg-purple-950/50 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="fantasy-card max-w-md w-full p-6 bg-white/95 border-2 border-pink-400 relative">
+            <div class="text-center">
+                <div class="w-16 h-16 mx-auto rounded-full bg-pink-100 border-2 border-yellow-400 flex items-center justify-center text-3xl mb-3 animate-bounce">
+                    🧚‍♀️
+                </div>
+                <span class="px-3 py-0.5 rounded-full bg-rose-100 text-rose-600 text-[11px] font-bold">⚠️ ระบบเตือนสติ 2 ชั้น (Time-Lock Guard)</span>
+                <h3 class="text-xl font-bold text-pink-600 font-cute mt-2">เดี๋ยวก่อนค่ะคุณประธานพร!</h3>
+                <p class="text-sm text-gray-600 mt-2">
+                    หีบสมบัติ <span id="modalVaultName" class="font-bold text-purple-700"></span> ยังไม่ถึงวันปลดล็อกที่ตั้งไว้เลยนะคะ
+                    หากเปิดก่อนกำหนด อาจทำให้ช่วงปลายเดือนต้องทานมาม่าได้นะ!
+                </p>
+
+                <!-- ชั้นที่ 1: เช็กบ็อกซ์ยืนยันความจำเป็น -->
+                <div class="mt-4 p-3 rounded-2xl bg-purple-50 border border-purple-200 text-left flex items-start gap-2.5">
+                    <input type="checkbox" id="unlockCheckStep1" class="mt-1 w-4 h-4 accent-pink-500 cursor-pointer">
+                    <label for="unlockCheckStep1" class="text-xs text-purple-900 cursor-pointer">
+                        <strong>ชั้นที่ 1:</strong> ฉันยอมรับว่านี่คือเหตุฉุกเฉินจริงๆ และไม่ใช่การซื้อของตามอารมณ์ชั่ววูบ
+                    </label>
+                </div>
+
+                <!-- ชั้นที่ 2: พิมพ์คำยืนยัน -->
+                <div class="mt-2.5 p-3 rounded-2xl bg-pink-50 border border-pink-200 text-left">
+                    <label class="block text-xs font-semibold text-pink-700 mb-1">
+                        <strong>ชั้นที่ 2:</strong> พิมพ์คำว่า <span class="underline font-bold">"จำเป็นฉุกเฉิน"</span> เพื่อร่ายเวทคลายผนึก:
+                    </label>
+                    <input type="text" id="unlockConfirmInput" placeholder="พิมพ์คำว่า จำเป็นฉุกเฉิน..." class="w-full px-3 py-2 rounded-xl border border-pink-300 focus:outline-none focus:border-pink-500 text-sm">
+                </div>
+
+                <div class="flex gap-3 mt-5">
+                    <button onclick="closeEmergencyModal()" class="flex-1 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm transition cursor-pointer">
+                        เก็บไว้เหมือนเดิม 💖
+                    </button>
+                    <button onclick="confirmEmergencyUnlock()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-purple-600 text-white font-semibold text-sm shadow hover:opacity-95 transition cursor-pointer">
+                        ยืนยันถอนฉุกเฉิน 🔓
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 1. HEADER & WELCOME BANNER (สวัสดีคุณประธานพร + ตัวการ์ตูนเจ้าหญิง) -->
+    <!-- ===================================================================== -->
+    <header class="relative z-10 max-w-6xl mx-auto px-4 pt-5 pb-3 space-y-4">
+        <!-- Top Brand Bar -->
+        <div class="fantasy-card px-5 py-3 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-pink-400 via-purple-400 to-yellow-300 p-0.5 shadow-md">
+                    <div class="w-full h-full bg-white rounded-[14px] flex items-center justify-center text-2xl">
+                        👑
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg md:text-xl font-bold bg-gradient-to-r from-pink-600 via-purple-600 to-amber-500 bg-clip-text text-transparent font-cute">
+                            Allowance Guard
+                        </h1>
+                        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-yellow-100 text-amber-700 border border-yellow-300">
+                            ✨ Fantasy Pink
+                        </span>
+                    </div>
+                    <p class="text-xs text-purple-700/80">ผู้ช่วยจัดสรรเงินก้อนอัจฉริยะ (Smart Budgeting)</p>
+                </div>
+            </div>
+
+            <!-- แต้มดาวสะสม & เลเวลปัจจุบัน -->
+            <div class="flex items-center gap-2.5">
+                <div class="px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50 border border-pink-300 flex items-center gap-2 shadow-sm">
+                    <span class="text-lg">🏰</span>
+                    <div>
+                        <p class="text-[10px] text-purple-700 font-medium leading-none">ระดับเจ้าหญิงนักออม</p>
+                        <p class="text-xs font-bold text-pink-600">Level <span id="headerLevelNum">2</span> • <span id="headerLevelTitle">เจ้าหญิงฝึกหัด</span></p>
+                    </div>
+                </div>
+
+                <div class="px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-50 to-yellow-100 border border-yellow-300 flex items-center gap-2 shadow-sm">
+                    <span class="text-lg">⭐</span>
+                    <div>
+                        <p class="text-[10px] text-amber-700 font-medium leading-none">ดาวเวทมนตร์สะสม</p>
+                        <p class="text-sm font-bold text-amber-600"><span id="headerMagicStars">120</span> ดวง</p>
+                    </div>
+                </div>
+
+                <button onclick="resetDemoData()" title="รีเซ็ตข้อมูลตัวอย่าง" class="p-2.5 rounded-xl bg-pink-100 hover:bg-pink-200 text-pink-600 text-xs font-medium transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span class="hidden md:inline">รีเซ็ตข้อมูล</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Welcome Banner ต้อนรับคุณประธานพร พร้อมตัวการ์ตูนเจ้าหญิงนางฟ้าพิทักษ์การออม -->
+        <div class="fantasy-card gold-border p-5 md:p-7 bg-gradient-to-r from-pink-100/95 via-purple-100/90 to-rose-100/95 relative overflow-hidden">
+            <div class="absolute top-3 right-14 text-yellow-400 text-xl animate-twinkle">✨</div>
+            <div class="absolute bottom-4 left-1/3 text-pink-400 text-lg animate-twinkle" style="animation-delay: 1s;">🌸</div>
+
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="space-y-2.5 text-center md:text-left max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/90 border border-pink-300 text-pink-600 text-xs font-bold shadow-sm">
+                        <i class="fa-solid fa-sparkles text-yellow-500"></i>
+                        <span>อาณาจักรแห่งการวางแผนเงินก้อน & กยศ.</span>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-purple-900 font-cute leading-snug">
+                        สวัสดีคุณประธานพร ✨<br>
+                        <span class="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                            ยินดีต้อนรับเข้าสู่ระบบด้านการออมเงิน
+                        </span>
+                    </h2>
+                    <p class="text-sm text-purple-800/85 leading-relaxed">
+                        นางฟ้าผู้พิทักษ์พร้อมเสกเวทมนตร์ช่วยซอยเงินก้อนของคุณให้ใช้ได้สบายใจจนถึงสิ้นเดือน ไม่ต้องพึ่งมาม่าช่วงปลายเดือนอีกต่อไป! 💖
+                    </p>
+
+                    <!-- หลอดเลเวลเจ้าหญิงนักออม -->
+                    <div class="max-w-md mx-auto md:mx-0 pt-1">
+                        <div class="flex justify-between text-[11px] font-bold text-purple-800 mb-1">
+                            <span>👑 เลเวล <span id="bannerLevelNum">2</span> (<span id="bannerLevelTitle">เจ้าหญิงฝึกหัด</span>)</span>
+                            <span>อีก <span id="starsToNextLevel">80</span> ดาวเพื่ออัปเลเวล!</span>
+                        </div>
+                        <div class="w-full h-3 bg-white/80 rounded-full overflow-hidden p-0.5 border border-pink-300">
+                            <div id="levelProgressFill" class="h-full rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-yellow-400 transition-all duration-500" style="width: 20%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- มาสคอตเจ้าหญิงนางฟ้าผู้พิทักษ์การออม (SVG น่ารักธีมสีชมพู) -->
+                <div class="shrink-0 animate-float flex flex-col items-center">
+                    <div class="relative w-40 h-40 md:w-44 md:h-44 flex items-center justify-center">
+                        <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-pink-300 via-yellow-200 to-purple-300 opacity-55 blur-xl"></div>
+                        <svg viewBox="0 0 220 220" class="w-full h-full relative z-10 drop-shadow-lg" xmlns="http://www.w3.org/2000/svg">
+                            <!-- ปีกนางฟ้า -->
+                            <path d="M75 115 C30 80, 20 135, 68 140 Z" fill="#fef08a" opacity="0.9" stroke="#facc15" stroke-width="2"/>
+                            <path d="M145 115 C190 80, 200 135, 152 140 Z" fill="#fef08a" opacity="0.9" stroke="#facc15" stroke-width="2"/>
+                            <path d="M72 138 C40 145, 45 175, 78 160 Z" fill="#f5d0fe" opacity="0.9"/>
+                            <path d="M148 138 C180 145, 175 175, 142 160 Z" fill="#f5d0fe" opacity="0.9"/>
+                            <!-- ชุดเดรสเจ้าหญิงสีชมพู -->
+                            <path d="M75 135 L145 135 L165 200 C130 212, 90 212, 55 200 Z" fill="url(#dressGrad)" stroke="#ff85b3" stroke-width="2"/>
+                            <path d="M85 135 Q110 155 135 135" fill="#fff0f6"/>
+                            <!-- ผมลอนเจ้าหญิง -->
+                            <circle cx="110" cy="92" r="46" fill="#7e22ce"/>
+                            <circle cx="72" cy="115" r="16" fill="#9333ea"/>
+                            <circle cx="148" cy="115" r="16" fill="#9333ea"/>
+                            <!-- ใบหน้าน่ารัก -->
+                            <circle cx="110" cy="95" r="36" fill="#ffe4e6"/>
+                            <!-- หน้าม้า -->
+                            <path d="M74 88 C78 55, 142 55, 146 88 C135 75, 120 82, 110 74 C100 82, 85 75, 74 88 Z" fill="#9333ea"/>
+                            <!-- มงกุฎทองคำ -->
+                            <polygon points="90,58 96,42 104,53 110,36 116,53 124,42 130,58" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>
+                            <circle cx="110" cy="51" r="3" fill="#ff2e7e"/>
+                            <!-- ดวงตากลมโตเป็นประกาย -->
+                            <ellipse cx="97" cy="96" rx="5.5" ry="6.5" fill="#3b0764"/>
+                            <circle cx="95" cy="93.5" r="2" fill="#ffffff"/>
+                            <ellipse cx="123" cy="96" rx="5.5" ry="6.5" fill="#3b0764"/>
+                            <circle cx="121" cy="93.5" r="2" fill="#ffffff"/>
+                            <!-- แก้มชมพูระเรื่อ -->
+                            <ellipse cx="87" cy="104" rx="5" ry="3" fill="#ff85b3" opacity="0.75"/>
+                            <ellipse cx="133" cy="104" rx="5" ry="3" fill="#ff85b3" opacity="0.75"/>
+                            <!-- รอยยิ้ม -->
+                            <path d="M104 106 Q110 113 116 106" stroke="#e11d48" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                            <!-- คทาเวทมนตร์ดาวทอง -->
+                            <line x1="162" y1="165" x2="178" y2="105" stroke="#eab308" stroke-width="4" stroke-linecap="round"/>
+                            <polygon points="178,88 182,99 194,99 184,106 188,117 178,110 168,117 172,106 162,99 174,99" fill="#facc15" stroke="#fff" stroke-width="1.5"/>
+                            <!-- กระปุกหมูทองคำในอ้อมกอด -->
+                            <ellipse cx="110" cy="162" rx="22" ry="16" fill="#fde047" stroke="#eab308" stroke-width="2"/>
+                            <ellipse cx="110" cy="164" rx="8" ry="5.5" fill="#fef08a" stroke="#eab308" stroke-width="1.5"/>
+                            <circle cx="107" cy="164" r="1.2" fill="#ca8a04"/>
+                            <circle cx="113" cy="164" r="1.2" fill="#ca8a04"/>
+                            <defs>
+                                <linearGradient id="dressGrad" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="#ff7eb3"/>
+                                    <stop offset="100%" stop-color="#d946ef"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <span class="px-3 py-0.5 rounded-full bg-white/90 border border-yellow-300 text-[11px] font-bold text-pink-600 shadow-sm -mt-2">
+                        🧚‍♀️ นางฟ้าพิทักษ์เงินออม
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- แถบเมนูนำทาง 5 หน้าหลัก -->
+        <nav class="flex overflow-x-auto gap-2 pb-1">
+            <button onclick="switchPage('page1')" id="nav-page1" class="nav-pill active shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/85 border-2 border-pink-200 text-pink-700 font-semibold text-sm transition cursor-pointer">
+                <span>🏰</span>
+                <span>1. ปราสาทงบรายวัน</span>
+            </button>
+            <button onclick="switchPage('page2')" id="nav-page2" class="nav-pill shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/85 border-2 border-pink-200 text-pink-700 font-semibold text-sm transition cursor-pointer">
+                <span>🔐</span>
+                <span>2. หีบสมบัติล็อกเวลา</span>
+            </button>
+            <button onclick="switchPage('page3')" id="nav-page3" class="nav-pill shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/85 border-2 border-pink-200 text-pink-700 font-semibold text-sm transition cursor-pointer">
+                <span>🪞</span>
+                <span>3. กระจกวิเศษเตือนช้อป</span>
+            </button>
+            <button onclick="switchPage('page4')" id="nav-page4" class="nav-pill shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/85 border-2 border-pink-200 text-pink-700 font-semibold text-sm transition cursor-pointer">
+                <span>🧾</span>
+                <span>4. Split Bill & สแกนสลิป</span>
+            </button>
+            <button onclick="switchPage('page5')" id="nav-page5" class="nav-pill shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/85 border-2 border-pink-200 text-pink-700 font-semibold text-sm transition cursor-pointer">
+                <span>👛</span>
+                <span>5. กระเป๋าเงินกลุ่มโปร่งใส</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="relative z-10 max-w-6xl mx-auto px-4 mt-2">
+
+        <!-- ===================================================================== -->
+        <!-- 2. หน้า 1: ปราสาทงบรายวัน (Daily Safe-to-Spend) -->
+        <!-- ===================================================================== -->
+        <section id="page1" class="page-section active space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- การ์ดแสดงผลโควตาใช้ได้วันนี้ -->
+                <div class="lg:col-span-7 fantasy-card p-6 flex flex-col justify-between relative overflow-hidden">
+                    <div>
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                            <span class="px-3 py-1 rounded-full bg-pink-100 text-pink-700 text-xs font-bold flex items-center gap-1.5">
+                                <i class="fa-solid fa-wand-sparkles text-pink-500"></i> Daily Safe-to-Spend
+                            </span>
+                            <span id="rolloverBadge" class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
+                                ✨ ทบยอดจากเมื่อวาน +45 บาท
+                            </span>
+                        </div>
+
+                        <div class="text-center py-5 px-3 rounded-3xl bg-gradient-to-b from-pink-50/90 to-purple-50/90 border border-pink-200">
+                            <p class="text-sm font-medium text-purple-800">โควตาเวทมนตร์ที่ใช้ได้ปลอดภัยวันนี้</p>
+                            <div class="my-2 flex items-baseline justify-center gap-2">
+                                <span id="dailyQuotaDisplay" class="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-pink-600 via-purple-600 to-amber-500 bg-clip-text text-transparent font-cute">
+                                    215.00
+                                </span>
+                                <span class="text-xl font-bold text-pink-600">บาท</span>
+                            </div>
+                            <p class="text-xs text-gray-600">
+                                ใช้ไปแล้ววันนี้ <span id="spentTodayDisplay" class="font-bold text-rose-600">85</span> บาท • เหลือใช้ได้อีก <span id="remainingTodayDisplay" class="font-bold text-emerald-600">130</span> บาท
+                            </p>
+
+                            <!-- หลอดพลังเวทมนตร์งบประมาณวันนี้ -->
+                            <div class="mt-4 max-w-md mx-auto">
+                                <div class="flex justify-between text-[11px] font-semibold text-purple-700 mb-1">
+                                    <span>พลังเวทมนตร์คงเหลือวันนี้</span>
+                                    <span id="magicBarPercent">60%</span>
+                                </div>
+                                <div class="w-full h-4 bg-pink-200/70 rounded-full overflow-hidden p-0.5 border border-pink-300">
+                                    <div id="magicBarFill" class="h-full rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-yellow-400 transition-all duration-500" style="width: 60%;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- สรุปข้อมูลเงินก้อน -->
+                        <div class="grid grid-cols-3 gap-3 mt-4 text-center">
+                            <div class="p-3 rounded-2xl bg-white/85 border border-pink-100">
+                                <p class="text-[11px] text-gray-500">เงินก้อนคงเหลือ</p>
+                                <p class="text-base md:text-lg font-bold text-purple-800"><span id="totalBudgetDisplay">4,215</span> ฿</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white/85 border border-pink-100">
+                                <p class="text-[11px] text-gray-500">จำนวนวันที่เหลือ</p>
+                                <p class="text-base md:text-lg font-bold text-pink-600"><span id="daysLeftDisplay">20</span> วัน</p>
+                            </div>
+                            <div class="p-3 rounded-2xl bg-white/85 border border-pink-100">
+                                <p class="text-[11px] text-gray-500">เฉลี่ยพื้นฐาน/วัน</p>
+                                <p class="text-base md:text-lg font-bold text-amber-600"><span id="baseDailyDisplay">170</span> ฿</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ฟอร์มบันทึกค่าใช้จ่ายวันนี้ & จำลองขึ้นวันใหม่ -->
+                    <div class="mt-5 pt-4 border-t border-pink-200/70">
+                        <label class="block text-xs font-bold text-purple-800 mb-2">📝 บันทึกค่าใช้จ่ายวันนี้ (หักออกจากโควตาเรียลไทม์)</label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="expenseNoteInput" placeholder="เช่น ข้าวมันไก่ + ชาไข่มุก" class="flex-1 px-3.5 py-2.5 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm">
+                            <input type="number" id="expenseAmountInput" placeholder="จำนวนเงิน (บาท)" min="1" class="w-full sm:w-36 px-3.5 py-2.5 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm">
+                            <button onclick="recordTodayExpense()" class="magic-btn px-5 py-2.5 rounded-xl font-semibold text-sm shrink-0 cursor-pointer">
+                                หักงบวันนี้ ✨
+                            </button>
+                        </div>
+
+                        <div class="mt-3 flex flex-wrap items-center justify-between gap-2 bg-purple-50/90 p-3 rounded-2xl border border-purple-200">
+                            <p class="text-xs text-purple-800">
+                                💡 <strong>ระบบทบยอดอัตโนมัติ:</strong> หากวันนี้ใช้ไม่หมด ยอดที่เหลือจะทบเพิ่มให้วันพรุ่งนี้ทันที!
+                            </p>
+                            <button onclick="simulateNextDay()" class="gold-btn px-3.5 py-2 rounded-xl text-xs cursor-pointer flex items-center gap-1.5">
+                                <i class="fa-solid fa-moon"></i> จำลองขึ้นวันใหม่ (ทบยอดอัตโนมัติ)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- การ์ดตั้งค่าเงินก้อน (กยศ. / รายเดือน) & ประวัติการใช้จ่ายวันนี้ -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="fantasy-card p-6">
+                        <h3 class="text-base font-bold text-purple-900 flex items-center gap-2 mb-3 font-cute">
+                            <span class="text-xl">💰</span> ตั้งค่าเงินก้อนของคุณ (กยศ. / รายเดือน)
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">ยอดเงินก้อนที่มีทั้งหมด (บาท)</label>
+                                <input type="number" id="setupTotalMoney" value="4215" class="w-full px-3.5 py-2 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm font-semibold text-purple-900">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1">จำนวนวันที่เหลือของเดือน (วัน)</label>
+                                <input type="number" id="setupDaysLeft" value="20" min="1" max="365" class="w-full px-3.5 py-2 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm font-semibold text-purple-900">
+                            </div>
+                            <button onclick="updateBudgetSettings()" class="w-full magic-btn py-2.5 rounded-xl font-semibold text-sm cursor-pointer">
+                                คำนวณโควตารายวันใหม่ 🪄
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="fantasy-card p-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-base font-bold text-purple-900 flex items-center gap-2 font-cute">
+                                <span class="text-xl">📜</span> รายการที่ใช้ไปวันนี้
+                            </h3>
+                            <span class="text-xs text-pink-600 font-semibold" id="todayTxCount">2 รายการ</span>
+                        </div>
+                        <div id="todayExpenseList" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+                            <!-- แสดงผลผ่าน JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- 3. หน้า 2: หีบสมบัติล็อกเวลา (Time-Lock Vault) -->
+        <!-- ===================================================================== -->
+        <section id="page2" class="page-section space-y-6">
+            <div class="fantasy-card p-6 md:p-8 bg-gradient-to-r from-purple-100/90 via-pink-100/90 to-amber-50/90">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                        <span class="px-3 py-1 rounded-full bg-purple-200/80 text-purple-800 text-xs font-bold">🔐 Time-Lock Magic Vault</span>
+                        <h2 class="text-2xl font-bold text-purple-900 font-cute mt-2">หีบสมบัติล็อกเวลา & ห้องเก็บเงินฉุกเฉิน</h2>
+                        <p class="text-sm text-gray-600 mt-1">
+                            แบ่งเงินก้อนส่วนหนึ่งมาผนึกไว้ในหีบเวทมนตร์ ตั้งวันปลดล็อกช่วงปลายเดือน พร้อมระบบเตือนสติ 2 ชั้นก่อนกดปลดล็อกฉุกเฉิน!
+                        </p>
+                    </div>
+                    <div class="text-center px-5 py-3 rounded-2xl bg-white/95 gold-border shrink-0">
+                        <p class="text-xs text-gray-500">ยอดเงินที่ถูกผนึกปลอดภัยทั้งหมด</p>
+                        <p class="text-2xl font-extrabold text-purple-700 font-cute"><span id="totalVaultLockedDisplay">1,500</span> บาท</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- ฟอร์มสร้างหีบสมบัติล็อกเงินใหม่ -->
+                <div class="lg:col-span-5 fantasy-card p-6 h-fit">
+                    <h3 class="text-lg font-bold text-pink-700 font-cute flex items-center gap-2 mb-4">
+                        <span>✨</span> สร้างหีบสมบัติล็อกเงินใหม่
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">ชื่อเป้าหมายของหีบสมบัติ</label>
+                            <input type="text" id="vaultNameInput" placeholder="เช่น เงินรอดชีวิตสัปดาห์สุดท้ายของเดือน" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">จำนวนเงินที่ต้องการล็อก (บาท)</label>
+                            <input type="number" id="vaultAmountInput" placeholder="เช่น 1000" min="50" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">ตั้งวันที่ปลดล็อกอัตโนมัติ</label>
+                            <input type="date" id="vaultDateInput" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm">
+                        </div>
+                        <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
+                            ⚠️ เมื่อกดล็อกแล้ว ระบบจะซ่อนเงินก้อนนี้จากงบใช้จ่ายรายวันจนกว่าจะถึงวันที่กำหนด
+                        </div>
+                        <button onclick="createNewVault()" class="w-full magic-btn py-3 rounded-xl font-bold text-sm cursor-pointer">
+                            ร่ายเวทล็อกเงินเข้าหีบสมบัติ 🔒
+                        </button>
+                    </div>
+                </div>
+
+                <!-- รายการหีบสมบัติที่กำลังล็อกอยู่ -->
+                <div class="lg:col-span-7 space-y-4" id="vaultListContainer">
+                    <!-- แสดงผลหีบสมบัติผ่าน JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- 4. หน้า 3: กระจกวิเศษเตือนช้อป (Impulse Buy Checker) -->
+        <!-- ===================================================================== -->
+        <section id="page3" class="page-section space-y-6">
+            <div class="fantasy-card gold-border p-6 md:p-8 bg-gradient-to-br from-pink-100/95 via-white/95 to-purple-100/95">
+                <div class="max-w-3xl mx-auto text-center space-y-3">
+                    <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-pink-500 text-white text-xs font-bold shadow">
+                        <span>🪞</span> กระจกวิเศษส่องความคุ้มค่า (AI Impulse Buy Checker)
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-purple-900 font-cute">
+                        🛍️ ของชิ้นนี้ราคาเท่าไหร่?
+                    </h2>
+                    <p class="text-sm text-gray-600">
+                        ห้องเก็บเงินก่อนซื้อสินค้า ให้กระจกวิเศษช่วยแปลงราคาสินค้าเป็นจำนวนมื้ออาหารและผลกระทบต่องบรายวันของคุณก่อนกดจ่ายเงิน!
+                    </p>
+
+                    <div class="mt-5 grid grid-cols-1 sm:grid-cols-12 gap-3 bg-white/90 p-4 rounded-3xl border-2 border-pink-200 shadow-inner">
+                        <div class="sm:col-span-4">
+                            <input type="text" id="itemNameInput" placeholder="ชื่อสินค้า เช่น ลิปสติก / เสื้อแฟชั่น" class="w-full px-4 py-3 rounded-2xl bg-pink-50/50 border border-pink-200 focus:outline-none focus:border-pink-500 text-sm">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <input type="number" id="itemPriceInput" placeholder="ราคาสินค้า (บาท)" min="1" oninput="analyzeImpulseBuy()" class="w-full px-4 py-3 rounded-2xl bg-pink-50/50 border border-pink-200 focus:outline-none focus:border-pink-500 text-sm font-bold text-pink-600">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <div class="relative">
+                                <input type="number" id="mealPriceInput" value="50" min="10" oninput="analyzeImpulseBuy()" title="ราคาอาหารเฉลี่ยต่อมื้อ" class="w-full pl-3 pr-14 py-3 rounded-2xl bg-amber-50/60 border border-amber-200 focus:outline-none focus:border-amber-500 text-sm font-semibold text-amber-800">
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-amber-700">฿/มื้อ</span>
+                            </div>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <button onclick="analyzeImpulseBuy()" class="w-full h-full magic-btn py-3 px-3 rounded-2xl font-bold text-sm cursor-pointer">
+                                ส่องกระจก ✨
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ปุ่มตัวอย่างสินค้ากดเร็ว -->
+                    <div class="flex flex-wrap justify-center gap-2 pt-1 text-xs">
+                        <span class="text-gray-500 py-1">ลองกดตัวอย่าง:</span>
+                        <button onclick="quickFillItem('ชาไข่มุกแก้วโปรด', 65)" class="px-3 py-1 rounded-full bg-white hover:bg-pink-100 border border-pink-200 text-pink-700 transition cursor-pointer">🧋 ชาไข่มุก 65฿</button>
+                        <button onclick="quickFillItem('เสื้อคาร์ดิแกนสีชมพู', 490)" class="px-3 py-1 rounded-full bg-white hover:bg-pink-100 border border-pink-200 text-pink-700 transition cursor-pointer">👚 เสื้อแฟชั่น 490฿</button>
+                        <button onclick="quickFillItem('น้ำหอมแบรนด์ดัง', 1890)" class="px-3 py-1 rounded-full bg-white hover:bg-pink-100 border border-pink-200 text-pink-700 transition cursor-pointer">🧴 น้ำหอม 1,890฿</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ผลการวิเคราะห์จากกระจกวิเศษ -->
+            <div id="impulseResultCard" class="fantasy-card p-6 md:p-8 border-2 border-purple-300">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    <!-- ฝั่งซ้าย: ตัวเลขเปรียบเทียบชัดเจน -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <div class="flex items-center justify-between border-b border-pink-100 pb-3">
+                            <div>
+                                <p class="text-xs text-gray-500">ผลการวิเคราะห์ไอเทม:</p>
+                                <h3 id="resItemName" class="text-xl font-bold text-purple-900 font-cute">เสื้อคาร์ดิแกนสีชมพู</h3>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500">ราคาสินค้า</p>
+                                <p class="text-2xl font-extrabold text-pink-600"><span id="resItemPrice">490</span> บาท</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- คิดเป็นค่าอาหารกี่มื้อ -->
+                            <div class="p-4 rounded-2xl bg-amber-50/90 border border-amber-200">
+                                <div class="flex items-center gap-2 text-amber-700 font-bold text-sm mb-1">
+                                    <span>🍱</span> คิดเป็นค่าอาหาร
+                                </div>
+                                <p class="text-3xl font-extrabold text-amber-600 font-cute">
+                                    <span id="resMealCount">10</span> มื้อ
+                                </p>
+                                <p class="text-xs text-amber-800/80 mt-1">
+                                    (เทียบมื้อละ <span id="resMealUnitDisplay">50</span>฿ หรือมาม่า <span id="resMamaCount" class="font-bold">70</span> ซอง!)
+                                </p>
+                            </div>
+
+                            <!-- งบต่อวันจะลดลงเท่าไหร่ -->
+                            <div class="p-4 rounded-2xl bg-rose-50/95 border border-rose-200">
+                                <div class="flex items-center gap-2 text-rose-700 font-bold text-sm mb-1">
+                                    <span>📉</span> หากซื้อแล้ว งบต่อวันจะลดลง
+                                </div>
+                                <p class="text-3xl font-extrabold text-rose-600 font-cute">
+                                    -<span id="resDailyDrop">24.50</span> ฿/วัน
+                                </p>
+                                <p class="text-xs text-rose-800/85 mt-1">
+                                    โควตาจะลดจาก <span id="resOldDaily">215</span>฿ เหลือ <span id="resNewDaily" class="font-bold underline">190.50</span> ฿/วัน
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ฝั่งขวา: คำแนะนำจากนางฟ้า AI เตือนสติก่อนตัดสินใจซื้อ -->
+                    <div class="lg:col-span-5 p-5 rounded-3xl bg-gradient-to-b from-purple-50 to-pink-50 border-2 border-pink-200 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-2.5 mb-2">
+                                <span class="text-2xl">🧚‍♀️</span>
+                                <h4 class="font-bold text-purple-900 font-cute">คำแนะนำจากนางฟ้า AI เตือนสติ</h4>
+                            </div>
+                            <p id="resAiAdvice" class="text-sm text-gray-700 leading-relaxed bg-white/85 p-3.5 rounded-2xl border border-pink-100">
+                                "ชิ้นนี้เทียบเท่าอาหารถึง 10 มื้อเลยนะคะคุณประธานพร! ถ้ารออีก 3 วันแล้วยังอยากได้อยู่ค่อยกลับมาซื้อดีไหมคะ?"
+                            </p>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-pink-200/60 flex flex-col gap-2">
+                            <button onclick="resistPurchaseReward()" class="w-full gold-btn py-3 px-4 rounded-2xl text-sm flex items-center justify-center gap-2 cursor-pointer">
+                                <span>💖 ตัดใจไม่ซื้อ! เก็บเงินไว้ & รับ +20 ดาว</span>
+                            </button>
+                            <button onclick="confirmImpulsePurchase()" class="w-full py-2 px-4 rounded-xl bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold transition cursor-pointer">
+                                🛍️ ยืนยันการซื้อชิ้นนี้ (หักจากงบวันนี้)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- 5. หน้า 4: Split Bill & สแกนสลิป (EMVCo PromptPay QR) -->
+        <!-- ===================================================================== -->
+        <section id="page4" class="page-section space-y-6">
+            <div class="fantasy-card p-6">
+                <span class="px-3 py-1 rounded-full bg-pink-100 text-pink-700 text-xs font-bold">🧾 Magic Receipt Scanner & PromptPay QR</span>
+                <h2 class="text-2xl font-bold text-purple-900 font-cute mt-2">Split Bill & สแกนสลิปสร้าง QR PromptPay อัตโนมัติ</h2>
+                <p class="text-sm text-gray-600">อัปโหลดรูปใบเสร็จ กรอกค่าอาหารของเพื่อนแต่ละคน แล้วสร้าง QR Code PromptPay มาตรฐาน EMVCo (CRC16) จริงให้เพื่อนสแกนจ่ายผ่านแอปธนาคารได้ทันที!</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- ส่วนที่ 1: ถ่ายรูป/อัปโหลดใบเสร็จ & กรอกค่าอาหารแต่ละคน -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="fantasy-card p-6">
+                        <h3 class="text-base font-bold text-purple-900 font-cute mb-3 flex items-center gap-2">
+                            <span>📸</span> 1. ถ่ายรูปหรืออัปโหลดใบเสร็จร้านอาหาร
+                        </h3>
+                        <div class="flex flex-col sm:flex-row items-center gap-4">
+                            <label class="w-full sm:w-48 h-40 rounded-2xl border-2 border-dashed border-pink-300 bg-pink-50/60 hover:bg-pink-100/60 flex flex-col items-center justify-center cursor-pointer transition overflow-hidden relative">
+                                <img id="receiptPreviewImg" class="hidden w-full h-full object-cover" alt="พรีวิวใบเสร็จ">
+                                <div id="receiptPlaceholder" class="text-center p-3">
+                                    <i class="fa-solid fa-camera text-2xl text-pink-500 mb-1"></i>
+                                    <p class="text-xs font-semibold text-pink-700">แตะเพื่อถ่ายรูป / เลือกสลิป</p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5">รองรับไฟล์ภาพทุกชนิด</p>
+                                </div>
+                                <input type="file" accept="image/*" capture="environment" onchange="handleReceiptUpload(event)" class="hidden">
+                            </label>
+
+                            <div class="flex-1 space-y-2 text-center sm:text-left">
+                                <p class="text-xs text-gray-600">
+                                    เมื่ออัปโหลดใบเสร็จแล้ว สามารถกดปุ่มให้ AI นางฟ้าช่วยดึงรายการอาหารของเพื่อนๆ ออกมาได้ทันที หรือแก้ไขตัวเลขเองได้เลยค่ะ
+                                </p>
+                                <button onclick="simulateScanReceipt()" class="magic-btn px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> จำลองสแกนใบเสร็จด้วย AI
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fantasy-card p-6">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                            <h3 class="text-base font-bold text-purple-900 font-cute flex items-center gap-2">
+                                <span>👯‍♀️</span> 2. รายชื่อเพื่อนและค่าอาหารแต่ละคน
+                            </h3>
+                            <div class="flex gap-2">
+                                <button onclick="splitEquallyPrompt()" class="px-3 py-1.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-700 text-xs font-semibold transition cursor-pointer">
+                                    หารเท่ากันทุกคน
+                                </button>
+                                <button onclick="addSplitFriend()" class="px-3 py-1.5 rounded-xl bg-pink-500 hover:bg-pink-600 text-white text-xs font-semibold transition cursor-pointer">
+                                    + เพิ่มชื่อเพื่อน
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="splitFriendsList" class="space-y-2.5">
+                            <!-- รายชื่อเพื่อนแสดงผลผ่าน JS -->
+                        </div>
+
+                        <div class="mt-4 pt-3 border-t border-pink-200 flex justify-between items-center">
+                            <span class="text-sm font-semibold text-gray-700">ยอดรวมบิลทั้งหมด:</span>
+                            <span class="text-xl font-extrabold text-pink-600"><span id="splitTotalAmount">0.00</span> บาท</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ส่วนที่ 2: สร้าง QR PromptPay มาตรฐาน EMVCo -->
+                <div class="lg:col-span-5 fantasy-card gold-border p-6 flex flex-col justify-between bg-white/95">
+                    <div>
+                        <h3 class="text-base font-bold text-purple-900 font-cute mb-3 flex items-center gap-2">
+                            <span>📲</span> 3. สร้าง QR PromptPay เรียกเก็บเงิน
+                        </h3>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">เบอร์โทรศัพท์ / เลขบัตรประชาชน PromptPay ของคนจ่าย</label>
+                                <input type="text" id="promptpayIdInput" value="0891234567" placeholder="เช่น 0891234567" oninput="generatePromptPayQR()" class="w-full px-3.5 py-2 rounded-xl bg-pink-50/50 border border-pink-200 focus:outline-none focus:border-pink-500 text-sm font-bold text-purple-900">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">เลือกเพื่อนที่ต้องการสร้าง QR เรียกเก็บเงิน</label>
+                                <select id="qrFriendSelect" onchange="generatePromptPayQR()" class="w-full px-3.5 py-2 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm font-semibold text-pink-700">
+                                    <!-- ตัวเลือกเพื่อนสร้างผ่าน JS -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- การ์ดแสดง QR Code สวยงามพร้อมสแกน -->
+                        <div class="mt-5 p-5 rounded-3xl bg-gradient-to-b from-blue-950 via-indigo-900 to-purple-900 text-white text-center shadow-lg relative overflow-hidden">
+                            <div class="bg-white text-blue-900 font-extrabold text-xs py-1 px-4 rounded-full inline-block mb-3 tracking-wider">
+                                THAI QR PAYMENT • PROMPTPAY
+                            </div>
+
+                            <div class="bg-white p-3.5 rounded-2xl inline-block mx-auto shadow-md">
+                                <div id="qrcodeCanvas" class="flex items-center justify-center"></div>
+                            </div>
+
+                            <div class="mt-3">
+                                <p class="text-xs text-pink-200">ยอดชำระของ: <span id="qrTargetName" class="font-bold text-white">น้องมิ้นท์</span></p>
+                                <p class="text-2xl font-extrabold text-yellow-300 mt-0.5"><span id="qrTargetAmount">145.00</span> บาท</p>
+                                <p class="text-[11px] text-indigo-200 mt-1">พร้อมเพย์: <span id="qrTargetPromptPay">0891234567</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-[11px] text-center text-gray-500 mt-3">
+                        ✨ QR Code สร้างด้วยมาตรฐาน EMVCo (CRC16) สแกนจ่ายผ่านแอปธนาคารได้จริง
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- 6. หน้า 5: กระเป๋าเงินกลุ่มโปร่งใส (Group Vault) -->
+        <!-- ===================================================================== -->
+        <section id="page5" class="page-section space-y-6">
+            <div class="fantasy-card p-6">
+                <span class="px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold">👛 Transparent Group Vault</span>
+                <h2 class="text-2xl font-bold text-purple-900 font-cute mt-2">กระเป๋าเงินกลุ่มโปร่งใส ตรวจสอบได้ทุกคน</h2>
+                <p class="text-sm text-gray-600">แยกบัญชีเงินกองกลางโครงงาน ค่ายอาสา และเงินกิจกรรมชัดเจน บันทึกทุกยอดเข้า-ออก ลดปัญหาความไม่ไว้วางใจในกลุ่ม</p>
+            </div>
+
+            <!-- การ์ดสรุปยอดเงินกองกลาง 3 กองทุนหลัก -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div onclick="filterGroupCategory('project')" class="fantasy-card p-5 cursor-pointer border-2 hover:border-pink-400 transition relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="w-11 h-11 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center text-xl">📚</span>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-pink-50 text-pink-600">เงินกองกลางโครงงาน</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">ยอดเงินคงเหลือปัจจุบัน</p>
+                    <p class="text-2xl font-extrabold text-pink-600 font-cute"><span id="bal-project">0</span> บาท</p>
+                </div>
+
+                <div onclick="filterGroupCategory('camp')" class="fantasy-card p-5 cursor-pointer border-2 hover:border-purple-400 transition relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="w-11 h-11 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl">🏕️</span>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-50 text-purple-600">เงินกองกลางค่าย</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">ยอดเงินคงเหลือปัจจุบัน</p>
+                    <p class="text-2xl font-extrabold text-purple-600 font-cute"><span id="bal-camp">0</span> บาท</p>
+                </div>
+
+                <div onclick="filterGroupCategory('activity')" class="fantasy-card p-5 cursor-pointer border-2 hover:border-amber-400 transition relative overflow-hidden">
+                    <div class="flex items-center justify-between">
+                        <span class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl">🎉</span>
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700">เงินกิจกรรม</span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3">ยอดเงินคงเหลือปัจจุบัน</p>
+                    <p class="text-2xl font-extrabold text-amber-600 font-cute"><span id="bal-activity">0</span> บาท</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- ฟอร์มบันทึกรายการฝากเงิน / เบิกใช้เงินกลุ่ม -->
+                <div class="lg:col-span-5 fantasy-card p-6 h-fit">
+                    <h3 class="text-base font-bold text-purple-900 font-cute mb-4 flex items-center gap-2">
+                        <span>✍️</span> บันทึกเงินเข้า–ออกกองกลาง
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">เลือกกระเป๋ากองกลาง</label>
+                            <select id="groupCatInput" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm font-semibold">
+                                <option value="project">📚 เงินกองกลางโครงงาน</option>
+                                <option value="camp">🏕️ เงินกองกลางค่าย</option>
+                                <option value="activity">🎉 เงินกิจกรรม</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">ประเภทรายการ</label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="groupTxType" value="in" checked class="peer hidden">
+                                    <div class="py-2 text-center rounded-xl border-2 border-emerald-200 bg-emerald-50/50 peer-checked:bg-emerald-500 peer-checked:text-white peer-checked:border-emerald-500 text-xs font-bold text-emerald-700 transition">
+                                        + ฝากเงินเข้ากลุ่ม
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="groupTxType" value="out" class="peer hidden">
+                                    <div class="py-2 text-center rounded-xl border-2 border-rose-200 bg-rose-50/50 peer-checked:bg-rose-500 peer-checked:text-white peer-checked:border-rose-500 text-xs font-bold text-rose-700 transition">
+                                        - เบิกใช้จ่ายกลุ่ม
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">ชื่อสมาชิกที่ฝาก / ผู้เบิกใช้เงิน</label>
+                            <input type="text" id="groupMemberInput" placeholder="เช่น ประธานพร / น้องพลอย" class="w-full px-3.5 py-2 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">เหตุผล / รายละเอียดรายการ</label>
+                            <input type="text" id="groupDescInput" placeholder="เช่น ค่าปริ้นเล่มโครงงาน / จ่ายค่ากองกลางงวด 1" class="w-full px-3.5 py-2 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 mb-1">จำนวนเงิน (บาท)</label>
+                            <input type="number" id="groupAmountInput" placeholder="เช่น 250" min="1" class="w-full px-3.5 py-2 rounded-xl bg-white border border-pink-200 focus:outline-none focus:border-pink-500 text-sm font-bold">
+                        </div>
+
+                        <button onclick="addGroupTransaction()" class="w-full magic-btn py-3 rounded-xl font-bold text-sm cursor-pointer">
+                            บันทึกรายการโปร่งใส ✨
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ประวัติรายการเงินเข้า-ออกทั้งหมด -->
+                <div class="lg:col-span-7 fantasy-card p-6">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h3 class="text-base font-bold text-purple-900 font-cute flex items-center gap-2">
+                            <span>📋</span> ประวัติรายการเงินเข้า–ออก (เรียลไทม์)
+                        </h3>
+                        <select id="groupFilterSelect" onchange="renderGroupVault()" class="px-3 py-1.5 rounded-xl bg-pink-50 border border-pink-200 text-xs font-semibold text-pink-700">
+                            <option value="all">แสดงทุกกองกลาง</option>
+                            <option value="project">เฉพาะเงินกองกลางโครงงาน</option>
+                            <option value="camp">เฉพาะเงินกองกลางค่าย</option>
+                            <option value="activity">เฉพาะเงินกิจกรรม</option>
+                        </select>
+                    </div>
+
+                    <div id="groupHistoryList" class="space-y-3 max-h-[430px] overflow-y-auto pr-1">
+                        <!-- แสดงรายการประวัติผ่าน JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===================================================================== -->
+    <!-- JAVASCRIPT LOGIC (State Management, EMVCo PromptPay QR, LocalStorage) -->
+    <!-- ===================================================================== -->
+    <script>
+        const DEFAULT_STATE = {
+            magicStars: 120,
+            budget: {
+                totalRemaining: 4215,
+                daysLeft: 20,
+                rolloverToday: 45,
+                spentToday: 85,
+                todayExpenses: [
+                    { id: 1, note: 'ข้าวไข่เจียวหมูสับ + น้ำเปล่า', amount: 45, time: '08:30' },
+                    { id: 2, note: 'กาแฟเย็นแก้ง่วงก่อนเข้าเรียน', amount: 40, time: '12:15' }
+                ]
+            },
+            vaults: [
+                {
+                    id: 'v1',
+                    name: 'หีบสมบัติรอดชีวิตสัปดาห์สุดท้ายของเดือน',
+                    amount: 1000,
+                    unlockDate: getFutureDateString(18),
+                    createdAt: 'ต้นเดือนนี้'
+                },
+                {
+                    id: 'v2',
+                    name: 'เงินสำรองค่าหอพัก & ค่าชีทเรียน',
+                    amount: 500,
+                    unlockDate: getFutureDateString(25),
+                    createdAt: 'ต้นเดือนนี้'
+                }
+            ],
+            splitBill: {
+                promptpayId: '0891234567',
+                friends: [
+                    { id: 'f1', name: 'ประธานพร (ฉัน)', amount: 155 },
+                    { id: 'f2', name: 'น้องมิ้นท์', amount: 145 },
+                    { id: 'f3', name: 'น้องพลอย', amount: 180 }
+                ]
+            },
+            groupTransactions: [
+                { id: 'g1', category: 'project', type: 'in', member: 'ประธานพร', desc: 'เก็บเงินกองกลางทำเล่มโปรเจกต์ (งวด 1)', amount: 300, date: 'วันนี้ 10:20' },
+                { id: 'g2', category: 'project', type: 'in', member: 'น้องมิ้นท์', desc: 'จ่ายเงินกองกลางโปรเจกต์ครบแล้ว', amount: 300, date: 'วันนี้ 10:25' },
+                { id: 'g3', category: 'project', type: 'out', member: 'ประธานพร', desc: 'ซื้อกระดาษอาร์ต & ค่าเข้าเล่มรายงาน', amount: 140, date: 'วันนี้ 13:10' },
+                { id: 'g4', category: 'camp', type: 'in', member: 'ตัวแทนค่ายอาสา', desc: 'ยอดสมทบทุนซื้ออุปกรณ์ทาสีโรงเรียน', amount: 1200, date: 'เมื่อวาน' },
+                { id: 'g5', category: 'activity', type: 'in', member: 'เหรัญญิกสาขา', desc: 'เงินกองกลางจัดงานบายเนียร์', amount: 850, date: '2 วันที่แล้ว' }
+            ]
+        };
+
+        let appState = {};
+        let pendingUnlockVaultId = null;
+
+        function getFutureDateString(daysAhead) {
+            const d = new Date();
+            d.setDate(d.getDate() + daysAhead);
+            return d.toISOString().split('T')[0];
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('allowance_guard_fantasy_v2');
+                if (saved) {
+                    appState = JSON.parse(saved);
+                } else {
+                    appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+                    saveState();
+                }
+            } catch (e) {
+                appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('allowance_guard_fantasy_v2', JSON.stringify(appState));
+            } catch (e) {
+                console.warn('ไม่สามารถบันทึกข้อมูลลง localStorage ได้', e);
+            }
+        }
+
+        function resetDemoData() {
+            appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            saveState();
+            renderAll();
+            showMagicToast('รีเซ็ตอาณาจักรเรียบร้อย ✨', 'คืนค่าข้อมูลตัวอย่างเริ่มต้นทั้งหมดให้คุณประธานพรแล้วค่ะ');
+        }
+
+        // เสียงกระดิ่งเวทมนตร์เบาๆ ผ่าน Web Audio API (ไม่ต้องใช้ไฟล์เสียงภายนอก)
+        function playMagicChime(type = 'sparkle') {
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const notes = type === 'reward' ? [523.25, 659.25, 783.99, 1046.50] : [659.25, 880.00];
+                notes.forEach((freq, idx) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+                    gain.gain.setValueAtTime(0.06, ctx.currentTime + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + idx * 0.08 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + idx * 0.08);
+                    osc.stop(ctx.currentTime + idx * 0.08 + 0.36);
+                });
+            } catch (e) {
+                // ข้ามหากเบราว์เซอร์บล็อกเสียงอัตโนมัติ
+            }
+        }
+
+        // แสดงแจ้งเตือนแบบน่ารัก (แทน alert)
+        function showMagicToast(title, message) {
+            playMagicChime('sparkle');
+            const toast = document.getElementById('magicToast');
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('translate-x-[150%]');
+            setTimeout(() => {
+                toast.classList.add('translate-x-[150%]');
+            }, 3500);
+        }
+
+        function createBackgroundStars() {
+            const container = document.getElementById('starContainer');
+            const symbols = ['✦', '✨', '★', '⋆', '🌸'];
+            for (let i = 0; i < 26; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.textContent = symbols[i % symbols.length];
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.fontSize = (10 + Math.random() * 14) + 'px';
+                star.style.animationDelay = (Math.random() * 3) + 's';
+                container.appendChild(star);
+            }
+        }
+
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-pill').forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById(pageId).classList.add('active');
+            document.getElementById('nav-' + pageId).classList.add('active');
+
+            if (pageId === 'page3') analyzeImpulseBuy();
+            if (pageId === 'page4') generatePromptPayQR();
+        }
+
+        // อัปเดตเลเวลและดาวสะสมบน Header & Banner
+        function renderHeaderLevel() {
+            const stars = appState.magicStars || 0;
+            const level = Math.floor(stars / 100) + 1;
+            const progressInLevel = stars % 100;
+            const starsNeeded = 100 - progressInLevel;
+
+            const titles = [
+                'เจ้าหญิงฝึกหัด',
+                'เจ้าหญิงผู้พิทักษ์การออม',
+                'ราชินีแห่งการวางแผนการเงิน',
+                'มหาเทพีผู้มั่งคั่งแห่งอาณาจักร'
+            ];
+            const levelTitle = titles[Math.min(level - 1, titles.length - 1)];
+
+            document.getElementById('headerMagicStars').textContent = stars.toLocaleString();
+            document.getElementById('headerLevelNum').textContent = level;
+            document.getElementById('headerLevelTitle').textContent = levelTitle;
+
+            document.getElementById('bannerLevelNum').textContent = level;
+            document.getElementById('bannerLevelTitle').textContent = levelTitle;
+            document.getElementById('starsToNextLevel').textContent = starsNeeded;
+            document.getElementById('levelProgressFill').style.width = progressInLevel + '%';
+        }
+
+        // =====================================================================
+        // LOGIC หน้า 1: Daily Safe-to-Spend
+        // =====================================================================
+        function getDailyQuotaMetrics() {
+            const b = appState.budget;
+            const days = Math.max(1, b.daysLeft);
+            const totalStartOfDay = b.totalRemaining + b.spentToday;
+            const baseDaily = Math.floor((totalStartOfDay - b.rolloverToday) / days);
+            const totalQuotaToday = Math.max(0, baseDaily + b.rolloverToday);
+            const remainingToday = totalQuotaToday - b.spentToday;
+            return { baseDaily, totalQuotaToday, remainingToday };
+        }
+
+        function renderPage1() {
+            renderHeaderLevel();
+            const b = appState.budget;
+            const { baseDaily, totalQuotaToday, remainingToday } = getDailyQuotaMetrics();
+
+            document.getElementById('dailyQuotaDisplay').textContent = totalQuotaToday.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('spentTodayDisplay').textContent = b.spentToday.toLocaleString();
+
+            const remEl = document.getElementById('remainingTodayDisplay');
+            if (remainingToday < 0) {
+                remEl.className = 'font-bold text-rose-600 underline';
+                remEl.textContent = `${remainingToday.toLocaleString()} (เกินงบ!)`;
+            } else {
+                remEl.className = 'font-bold text-emerald-600';
+                remEl.textContent = remainingToday.toLocaleString();
+            }
+
+            const rollBadge = document.getElementById('rolloverBadge');
+            if (b.rolloverToday > 0) {
+                rollBadge.textContent = `✨ ทบยอดจากเมื่อวาน +${b.rolloverToday} บาท`;
+                rollBadge.className = 'px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold';
+            } else {
+                rollBadge.textContent = `🌸 เริ่มต้นโควตาวันใหม่`;
+                rollBadge.className = 'px-3 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-bold';
+            }
+
+            const percent = totalQuotaToday > 0 ? Math.max(0, Math.min(100, Math.round((remainingToday / totalQuotaToday) * 100))) : 0;
+            document.getElementById('magicBarPercent').textContent = percent + '%';
+            document.getElementById('magicBarFill').style.width = percent + '%';
+
+            document.getElementById('totalBudgetDisplay').textContent = b.totalRemaining.toLocaleString();
+            document.getElementById('daysLeftDisplay').textContent = b.daysLeft;
+            document.getElementById('baseDailyDisplay').textContent = baseDaily.toLocaleString();
+
+            document.getElementById('setupTotalMoney').value = b.totalRemaining;
+            document.getElementById('setupDaysLeft').value = b.daysLeft;
+
+            const listEl = document.getElementById('todayExpenseList');
+            document.getElementById('todayTxCount').textContent = `${b.todayExpenses.length} รายการ`;
+            if (b.todayExpenses.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-center text-gray-400 py-6">วันนี้ยังไม่ได้ใช้เงินเลย เยี่ยมมากค่ะเจ้าหญิง! 👑</p>`;
+            } else {
+                listEl.innerHTML = b.todayExpenses.map(tx => `
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-pink-50/75 border border-pink-100">
+                        <div>
+                            <p class="text-xs font-semibold text-purple-900">${tx.note}</p>
+                            <p class="text-[10px] text-gray-500">เวลา ${tx.time} น.</p>
+                        </div>
+                        <span class="text-xs font-bold text-rose-600">-${tx.amount} ฿</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function recordTodayExpense() {
+            const noteInput = document.getElementById('expenseNoteInput');
+            const amtInput = document.getElementById('expenseAmountInput');
+            const note = noteInput.value.trim() || 'ค่าใช้จ่ายทั่วไป';
+            const amount = parseFloat(amtInput.value);
+
+            if (!amount || amount <= 0) {
+                showMagicToast('กรุณากรอกจำนวนเงิน', 'ใส่ตัวเลขค่าใช้จ่ายที่มากกว่า 0 บาทนะคะ');
+                return;
+            }
+
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            appState.budget.spentToday += amount;
+            appState.budget.totalRemaining = Math.max(0, appState.budget.totalRemaining - amount);
+            appState.budget.todayExpenses.unshift({
+                id: Date.now(),
+                note,
+                amount,
+                time: timeStr
+            });
+
+            noteInput.value = '';
+            amtInput.value = '';
+            saveState();
+            renderAll();
+            showMagicToast('บันทึกค่าใช้จ่ายแล้ว 📝', `หักงบ "${note}" จำนวน ${amount} บาทเรียบร้อยค่ะ`);
+        }
+
+        function simulateNextDay() {
+            const { remainingToday } = getDailyQuotaMetrics();
+            if (appState.budget.daysLeft <= 1) {
+                showMagicToast('ครบกำหนดรอบเดือนแล้ว 🎉', 'ยินดีด้วยค่ะคุณประธานพร บริหารเงินได้จนถึงวันสุดท้ายแล้ว!');
+                return;
+            }
+
+            const rollover = Math.max(0, Math.round(remainingToday));
+            appState.budget.daysLeft -= 1;
+            appState.budget.rolloverToday = rollover;
+            appState.budget.spentToday = 0;
+            appState.budget.todayExpenses = [];
+            if (rollover > 0) {
+                appState.magicStars += 15;
+            }
+
+            saveState();
+            renderAll();
+            showMagicToast('อรุณสวัสดิ์วันใหม่ 🌅', rollover > 0
+                ? `เมื่อวานใช้เงินประหยัด! ทบยอด +${rollover} บาทเข้าโควตาวันนี้ และรับ +15 ดาวค่ะ`
+                : 'เริ่มต้นวันใหม่แล้ว มาวางแผนใช้เงินอย่างมีความสุขกันนะคะ!');
+        }
+
+        function updateBudgetSettings() {
+            const total = parseFloat(document.getElementById('setupTotalMoney').value);
+            const days = parseInt(document.getElementById('setupDaysLeft').value);
+
+            if (isNaN(total) || total < 0 || isNaN(days) || days < 1) {
+                showMagicToast('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกยอดเงินและจำนวนวันให้ถูกต้องนะคะ');
+                return;
+            }
+
+            appState.budget.totalRemaining = total;
+            appState.budget.daysLeft = days;
+            appState.budget.rolloverToday = 0;
+            appState.budget.spentToday = 0;
+            appState.budget.todayExpenses = [];
+
+            saveState();
+            renderAll();
+            showMagicToast('อัปเดตปราสาทการออม ✨', `ซอยงบรายวันใหม่เรียบร้อย เหลือใช้ได้วันละ ${Math.floor(total / days)} บาทค่ะ`);
+        }
+
+        // =====================================================================
+        // LOGIC หน้า 2: Time-Lock Vault (เตือนสติ 2 ชั้น)
+        // =====================================================================
+        function renderPage2() {
+            const dateInput = document.getElementById('vaultDateInput');
+            if (!dateInput.value) dateInput.value = getFutureDateString(15);
+
+            const totalLocked = appState.vaults.reduce((sum, v) => sum + v.amount, 0);
+            document.getElementById('totalVaultLockedDisplay').textContent = totalLocked.toLocaleString();
+
+            const container = document.getElementById('vaultListContainer');
+            if (appState.vaults.length === 0) {
+                container.innerHTML = `
+                    <div class="fantasy-card p-8 text-center">
+                        <div class="text-4xl mb-2">🪄</div>
+                        <p class="font-bold text-purple-800">ยังไม่มีหีบสมบัติที่ล็อกไว้</p>
+                        <p class="text-xs text-gray-500 mt-1">ลองแบ่งเงินก้อนมาล็อกไว้ทางด้านซ้าย เพื่อป้องกันการใช้เพลินช่วงต้นเดือนนะคะ</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            container.innerHTML = appState.vaults.map(v => {
+                const unlock = new Date(v.unlockDate);
+                unlock.setHours(0, 0, 0, 0);
+                const diffTime = unlock - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const isUnlocked = diffDays <= 0;
+
+                return `
+                    <div class="fantasy-card p-5 border-2 ${isUnlocked ? 'border-emerald-400 bg-emerald-50/40' : 'border-purple-200'} flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-12 h-12 rounded-2xl ${isUnlocked ? 'bg-emerald-100 text-emerald-600' : 'bg-purple-100 text-purple-600'} flex items-center justify-center text-2xl shrink-0 shadow-sm">
+                                ${isUnlocked ? '🔓' : '🔐'}
+                            </div>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h4 class="font-bold text-purple-950 text-base">${v.name}</h4>
+                                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isUnlocked ? 'bg-emerald-100 text-emerald-700' : 'bg-pink-100 text-pink-700'}">
+                                        ${isUnlocked ? '✨ ครบกำหนดปลดล็อกแล้ว!' : `⏳ นับถอยหลังอีก ${diffDays} วัน`}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">วันปลดล็อก: <strong>${v.unlockDate}</strong></p>
+                                <p class="text-xl font-extrabold text-pink-600 mt-1 font-cute">${v.amount.toLocaleString()} บาท</p>
+                            </div>
+                        </div>
+
+                        <div class="w-full sm:w-auto flex justify-end">
+                            ${isUnlocked ? `
+                                <button onclick="withdrawUnlockedVault('${v.id}')" class="w-full sm:w-auto gold-btn px-4 py-2.5 rounded-xl text-xs cursor-pointer">
+                                    รับเงินเข้ากระเป๋าหลัก 🎉
+                                </button>
+                            ` : `
+                                <button onclick="openEmergencyModal('${v.id}')" class="w-full sm:w-auto px-4 py-2 rounded-xl bg-gray-100 hover:bg-rose-100 text-gray-600 hover:text-rose-600 text-xs font-semibold transition cursor-pointer">
+                                    ขอปลดล็อกฉุกเฉิน
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function createNewVault() {
+            const name = document.getElementById('vaultNameInput').value.trim();
+            const amount = parseFloat(document.getElementById('vaultAmountInput').value);
+            const unlockDate = document.getElementById('vaultDateInput').value;
+
+            if (!name || !amount || amount <= 0 || !unlockDate) {
+                showMagicToast('กรอกข้อมูลให้ครบนะคะ', 'ระบุชื่อหีบ จำนวนเงิน และวันที่ปลดล็อกให้ครบถ้วนค่ะ');
+                return;
+            }
+
+            if (amount > appState.budget.totalRemaining) {
+                showMagicToast('ยอดเงินก้อนหลักไม่พอ', 'ยอดเงินที่ต้องการล็อกมากกว่าเงินก้อนคงเหลือในปราสาทค่ะ');
+                return;
+            }
+
+            appState.budget.totalRemaining -= amount;
+            appState.vaults.unshift({
+                id: 'v' + Date.now(),
+                name,
+                amount,
+                unlockDate,
+                createdAt: 'วันนี้'
+            });
+            appState.magicStars += 25;
+
+            document.getElementById('vaultNameInput').value = '';
+            document.getElementById('vaultAmountInput').value = '';
+            saveState();
+            renderAll();
+            showMagicToast('ผนึกหีบสมบัติสำเร็จ 🔒', `ล็อกเงิน ${amount.toLocaleString()} บาท เรียบร้อย รับโบนัส +25 ดาว!`);
+        }
+
+        function withdrawUnlockedVault(id) {
+            const idx = appState.vaults.findIndex(v => v.id === id);
+            if (idx === -1) return;
+            const vault = appState.vaults[idx];
+            appState.budget.totalRemaining += vault.amount;
+            appState.vaults.splice(idx, 1);
+            saveState();
+            renderAll();
+            showMagicToast('ปลดล็อกสมบัติสำเร็จ 🎉', `โอนเงิน ${vault.amount.toLocaleString()} บาท กลับเข้าปราสาทงบรายวันแล้วค่ะ`);
+        }
+
+        function openEmergencyModal(id) {
+            const vault = appState.vaults.find(v => v.id === id);
+            if (!vault) return;
+            pendingUnlockVaultId = id;
+            document.getElementById('modalVaultName').textContent = `"${vault.name}" (${vault.amount.toLocaleString()} บาท)`;
+            document.getElementById('unlockCheckStep1').checked = false;
+            document.getElementById('unlockConfirmInput').value = '';
+            const modal = document.getElementById('emergencyModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEmergencyModal() {
+            const modal = document.getElementById('emergencyModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            pendingUnlockVaultId = null;
+        }
+
+        function confirmEmergencyUnlock() {
+            const step1Checked = document.getElementById('unlockCheckStep1').checked;
+            const txt = document.getElementById('unlockConfirmInput').value.trim();
+
+            if (!step1Checked) {
+                showMagicToast('ไม่ผ่านการยืนยันชั้นที่ 1', 'กรุณาติ๊กยืนยันความจำเป็นฉุกเฉินก่อนนะคะ');
+                return;
+            }
+            if (txt !== 'จำเป็นฉุกเฉิน') {
+                showMagicToast('ไม่ผ่านการยืนยันชั้นที่ 2', 'กรุณาพิมพ์คำว่า "จำเป็นฉุกเฉิน" ให้ถูกต้องเพื่อคลายผนึกค่ะ');
+                return;
+            }
+            if (pendingUnlockVaultId) {
+                withdrawUnlockedVault(pendingUnlockVaultId);
+            }
+            closeEmergencyModal();
+        }
+
+        // =====================================================================
+        // LOGIC หน้า 3: Impulse Buy Checker
+        // =====================================================================
+        function quickFillItem(name, price) {
+            document.getElementById('itemNameInput').value = name;
+            document.getElementById('itemPriceInput').value = price;
+            analyzeImpulseBuy();
+        }
+
+        function analyzeImpulseBuy() {
+            const name = document.getElementById('itemNameInput').value.trim() || 'เสื้อคาร์ดิแกนสีชมพู';
+            const price = parseFloat(document.getElementById('itemPriceInput').value) || 490;
+            const mealUnit = Math.max(10, parseFloat(document.getElementById('mealPriceInput').value) || 50);
+
+            const days = Math.max(1, appState.budget.daysLeft);
+            const { totalQuotaToday } = getDailyQuotaMetrics();
+
+            // คำนวณจำนวนมื้ออาหาร และมาม่า (ซองละ 7 บาท)
+            const meals = Math.max(1, Math.round(price / mealUnit));
+            const mamaPacks = Math.max(1, Math.round(price / 7));
+
+            // หากซื้อแล้ว งบต่อวันจะลดลงเท่าไหร่
+            const dailyDrop = price / days;
+            const newDaily = Math.max(0, totalQuotaToday - dailyDrop);
+
+            document.getElementById('resItemName').textContent = name;
+            document.getElementById('resItemPrice').textContent = price.toLocaleString();
+            document.getElementById('resMealCount').textContent = meals.toLocaleString();
+            document.getElementById('resMealUnitDisplay').textContent = mealUnit.toLocaleString();
+            document.getElementById('resMamaCount').textContent = mamaPacks.toLocaleString();
+            document.getElementById('resDailyDrop').textContent = dailyDrop.toFixed(2);
+            document.getElementById('resOldDaily').textContent = totalQuotaToday.toFixed(0);
+            document.getElementById('resNewDaily').textContent = newDaily.toFixed(2);
+
+            // สร้างคำแนะนำจากนางฟ้า AI ตามสัดส่วนราคา
+            const adviceEl = document.getElementById('resAiAdvice');
+            if (price > appState.budget.totalRemaining * 0.3) {
+                adviceEl.innerHTML = `🚨 <strong>คำเตือนระดับสีแดง!</strong> ของชิ้นนี้กินเงินก้อนไปกว่า ${Math.round((price / Math.max(1, appState.budget.totalRemaining)) * 100)}% และเท่ากับอาหารถึง <strong>${meals} มื้อ</strong> นางฟ้าแนะนำให้ปิดแอปช้อปปิ้งเดี๋ยวนี้เลยค่ะ เพื่อความปลอดภัยช่วงปลายเดือน!`;
+            } else if (price > totalQuotaToday) {
+                adviceEl.innerHTML = `⚠️ <strong>คิดทบทวนอีกนิดนะคะคุณประธานพร!</strong> ราคาชิ้นนี้สูงกว่าโควตาทั้งวันของคุณ และเทียบเท่าข้าว <strong>${meals} มื้อ</strong> ลองรอให้ครบ 48 ชั่วโมง ถ้ายิ่งคิดแล้วยังจำเป็นจริงๆ ค่อยตัดสินใจนะคะ`;
+            } else {
+                adviceEl.innerHTML = `✨ <strong>อยู่ในเกณฑ์ที่พอรับไหวค่ะ!</strong> ราคาเท่ากับอาหารประมาณ <strong>${meals} มื้อ</strong> และทำให้งบต่อวันลดลงเพียงวันละ ${dailyDrop.toFixed(1)} บาท หากเป็นของที่จำเป็นต้องใช้จริงๆ ก็จัดได้เลยค่ะ`;
+            }
+        }
+
+        function resistPurchaseReward() {
+            const name = document.getElementById('itemNameInput').value.trim() || 'ของชิ้นนี้';
+            const price = parseFloat(document.getElementById('itemPriceInput').value) || 490;
+            appState.magicStars += 20;
+            playMagicChime('reward');
+            saveState();
+            renderHeaderLevel();
+            showMagicToast('ชนะใจตัวเองสำเร็จ! 👑', `ตัดใจไม่ซื้อ "${name}" ประหยัดเงินได้ ${price.toLocaleString()} บาท รับ +20 ดาวเวทมนตร์!`);
+        }
+
+        function confirmImpulsePurchase() {
+            const name = document.getElementById('itemNameInput').value.trim() || 'เสื้อคาร์ดิแกนสีชมพู';
+            const price = parseFloat(document.getElementById('itemPriceInput').value) || 490;
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            appState.budget.spentToday += price;
+            appState.budget.totalRemaining = Math.max(0, appState.budget.totalRemaining - price);
+            appState.budget.todayExpenses.unshift({
+                id: Date.now(),
+                note: `ช้อปปิ้ง: ${name}`,
+                amount: price,
+                time: timeStr
+            });
+
+            saveState();
+            renderAll();
+            switchPage('page1');
+            showMagicToast('บันทึกการซื้อสินค้าแล้ว 🛍️', `หักค่า "${name}" จำนวน ${price.toLocaleString()} บาท ออกจากงบเรียบร้อยค่ะ`);
+        }
+
+        // =====================================================================
+        // LOGIC หน้า 4: Split Bill & EMVCo PromptPay QR
+        // =====================================================================
+        function handleReceiptUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('receiptPreviewImg');
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                document.getElementById('receiptPlaceholder').classList.add('hidden');
+                showMagicToast('อัปโหลดใบเสร็จแล้ว 🧾', 'กดปุ่ม "จำลองสแกนใบเสร็จด้วย AI" หรือกรอกยอดด้านล่างได้เลยค่ะ');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function simulateScanReceipt() {
+            appState.splitBill.friends = [
+                { id: 'f1', name: 'ประธานพร (ฉัน)', amount: 189 },
+                { id: 'f2', name: 'น้องมิ้นท์ (ชาบู+น้ำ)', amount: 215 },
+                { id: 'f3', name: 'น้องพลอย (ชุดหมูสไลซ์)', amount: 175 },
+                { id: 'f4', name: 'น้องฟ้า (ของหวาน+น้ำ)', amount: 120 }
+            ];
+            saveState();
+            renderPage4();
+            showMagicToast('AI สแกนสลิปสำเร็จ ✨', 'ดึงรายการอาหารและแยกยอดของเพื่อนทั้ง 4 คนเรียบร้อยแล้วค่ะ!');
+        }
+
+        function renderPage4() {
+            const listEl = document.getElementById('splitFriendsList');
+            const selectEl = document.getElementById('qrFriendSelect');
+            const prevSelected = selectEl.value;
+
+            let total = 0;
+            listEl.innerHTML = appState.splitBill.friends.map((f, idx) => {
+                total += parseFloat(f.amount) || 0;
+                return `
+                    <div class="flex items-center gap-2 bg-pink-50/65 p-2.5 rounded-2xl border border-pink-100">
+                        <span class="w-7 h-7 rounded-full bg-pink-200 text-pink-700 font-bold text-xs flex items-center justify-center shrink-0">${idx + 1}</span>
+                        <input type="text" value="${f.name}" onchange="updateFriendSplit('${f.id}', 'name', this.value)" class="flex-1 px-3 py-1.5 rounded-xl bg-white border border-pink-200 text-xs font-semibold text-purple-900">
+                        <input type="number" value="${f.amount}" oninput="updateFriendSplit('${f.id}', 'amount', this.value)" class="w-28 px-3 py-1.5 rounded-xl bg-white border border-pink-200 text-xs font-bold text-right text-pink-600">
+                        <span class="text-xs text-gray-500">฿</span>
+                        ${appState.splitBill.friends.length > 1 ? `
+                            <button onclick="removeSplitFriend('${f.id}')" class="p-1.5 text-gray-400 hover:text-rose-500 transition cursor-pointer">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('splitTotalAmount').textContent = total.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            selectEl.innerHTML = appState.splitBill.friends.map(f => `
+                <option value="${f.id}">${f.name} — ยอด ${parseFloat(f.amount || 0).toFixed(2)} บาท</option>
+            `).join('');
+
+            if (prevSelected && appState.splitBill.friends.some(f => f.id === prevSelected)) {
+                selectEl.value = prevSelected;
+            } else if (appState.splitBill.friends.length > 1) {
+                selectEl.value = appState.splitBill.friends[1].id;
+            }
+
+            document.getElementById('promptpayIdInput').value = appState.splitBill.promptpayId;
+            generatePromptPayQR();
+        }
+
+        function updateFriendSplit(id, field, val) {
+            const friend = appState.splitBill.friends.find(f => f.id === id);
+            if (!friend) return;
+            friend[field] = field === 'amount' ? (parseFloat(val) || 0) : val;
+            saveState();
+
+            const total = appState.splitBill.friends.reduce((s, f) => s + (parseFloat(f.amount) || 0), 0);
+            document.getElementById('splitTotalAmount').textContent = total.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const selectEl = document.getElementById('qrFriendSelect');
+            const curVal = selectEl.value;
+            selectEl.innerHTML = appState.splitBill.friends.map(f => `
+                <option value="${f.id}">${f.name} — ยอด ${parseFloat(f.amount || 0).toFixed(2)} บาท</option>
+            `).join('');
+            selectEl.value = curVal;
+            generatePromptPayQR();
+        }
+
+        function addSplitFriend() {
+            const count = appState.splitBill.friends.length + 1;
+            appState.splitBill.friends.push({
+                id: 'f' + Date.now(),
+                name: `เพื่อนคนที่ ${count}`,
+                amount: 100
+            });
+            saveState();
+            renderPage4();
+        }
+
+        function removeSplitFriend(id) {
+            appState.splitBill.friends = appState.splitBill.friends.filter(f => f.id !== id);
+            saveState();
+            renderPage4();
+        }
+
+        function splitEquallyPrompt() {
+            const total = appState.splitBill.friends.reduce((s, f) => s + (parseFloat(f.amount) || 0), 0);
+            const each = parseFloat((total / appState.splitBill.friends.length).toFixed(2));
+            appState.splitBill.friends.forEach(f => f.amount = each);
+            saveState();
+            renderPage4();
+            showMagicToast('หารเท่ากันเรียบร้อย ✨', `เฉลี่ยจ่ายคนละ ${each.toFixed(2)} บาทค่ะ`);
+        }
+
+        // EMVCo PromptPay CRC16 Checksum
+        function crc16(data) {
+            let crc = 0xFFFF;
+            for (let i = 0; i < data.length; i++) {
+                crc ^= data.charCodeAt(i) << 8;
+                for (let j = 0; j < 8; j++) {
+                    if ((crc & 0x8000) !== 0) {
+                        crc = (crc << 1) ^ 0x1021;
+                    } else {
+                        crc <<= 1;
+                    }
+                }
+            }
+            return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        function buildPromptPayPayload(targetId, amount) {
+            const cleanId = targetId.replace(/[^0-9]/g, '');
+            let formattedTarget = '';
+            let targetTypeTag = '01';
+
+            if (cleanId.length >= 13) {
+                targetTypeTag = '02';
+                formattedTarget = cleanId.substring(0, 13);
+            } else {
+                targetTypeTag = '01';
+                const phone = cleanId.startsWith('0') ? '0066' + cleanId.substring(1) : '0066' + cleanId;
+                formattedTarget = phone.padEnd(13, '0').substring(0, 13);
+            }
+
+            const f = (id, val) => id + val.length.toString().padStart(2, '0') + val;
+            const merchantInfo = f('00', 'A000000677010111') + f(targetTypeTag, formattedTarget);
+
+            let payload =
+                f('00', '01') +
+                f('01', amount > 0 ? '12' : '11') +
+                f('29', merchantInfo) +
+                f('53', '764') +
+                (amount > 0 ? f('54', amount.toFixed(2)) : '') +
+                f('58', 'TH') +
+                '6304';
+
+            return payload + crc16(payload);
+        }
+
+        function generatePromptPayQR() {
+            const ppId = document.getElementById('promptpayIdInput').value.trim() || '0891234567';
+            appState.splitBill.promptpayId = ppId;
+            saveState();
+
+            const selectedId = document.getElementById('qrFriendSelect').value;
+            const targetFriend = appState.splitBill.friends.find(f => f.id === selectedId) || appState.splitBill.friends[0];
+            const amount = targetFriend ? (parseFloat(targetFriend.amount) || 0) : 0;
+
+            document.getElementById('qrTargetName').textContent = targetFriend ? targetFriend.name : '-';
+            document.getElementById('qrTargetAmount').textContent = amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('qrTargetPromptPay').textContent = ppId;
+
+            const payload = buildPromptPayPayload(ppId, amount);
+            const qrContainer = document.getElementById('qrcodeCanvas');
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: payload,
+                width: 156,
+                height: 156,
+                colorDark: '#1e1b4b',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        // =====================================================================
+        // LOGIC หน้า 5: Group Vault
+        // =====================================================================
+        function filterGroupCategory(cat) {
+            document.getElementById('groupFilterSelect').value = cat;
+            renderGroupVault();
+        }
+
+        function renderGroupVault() {
+            const balances = { project: 0, camp: 0, activity: 0 };
+            appState.groupTransactions.forEach(tx => {
+                if (tx.type === 'in') balances[tx.category] += tx.amount;
+                else balances[tx.category] -= tx.amount;
+            });
+
+            document.getElementById('bal-project').textContent = balances.project.toLocaleString();
+            document.getElementById('bal-camp').textContent = balances.camp.toLocaleString();
+            document.getElementById('bal-activity').textContent = balances.activity.toLocaleString();
+
+            const filter = document.getElementById('groupFilterSelect').value;
+            const filtered = filter === 'all'
+                ? appState.groupTransactions
+                : appState.groupTransactions.filter(tx => tx.category === filter);
+
+            const catLabels = {
+                project: { label: 'เงินกองกลางโครงงาน', badge: 'bg-pink-100 text-pink-700', icon: '📚' },
+                camp: { label: 'เงินกองกลางค่าย', badge: 'bg-purple-100 text-purple-700', icon: '🏕️' },
+                activity: { label: 'เงินกิจกรรม', badge: 'bg-amber-100 text-amber-700', icon: '🎉' }
+            };
+
+            const listEl = document.getElementById('groupHistoryList');
+            if (filtered.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-center text-gray-400 py-8">ยังไม่มีรายการในหมวดหมู่นี้ค่ะ</p>`;
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(tx => {
+                const c = catLabels[tx.category];
+                const isIn = tx.type === 'in';
+                return `
+                    <div class="p-3.5 rounded-2xl bg-white/95 border border-pink-100 flex items-center justify-between gap-3 shadow-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 rounded-xl ${isIn ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'} flex items-center justify-center text-base shrink-0 font-bold">
+                                ${isIn ? '↓' : '↑'}
+                            </div>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${c.badge}">${c.icon} ${c.label}</span>
+                                    <span class="text-xs font-bold text-purple-900">โดย: ${tx.member}</span>
+                                </div>
+                                <p class="text-xs text-gray-700 mt-1">${tx.desc}</p>
+                                <p class="text-[10px] text-gray-400 mt-0.5">${tx.date}</p>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <span class="text-sm font-extrabold ${isIn ? 'text-emerald-600' : 'text-rose-600'}">
+                                ${isIn ? '+' : '-'}${tx.amount.toLocaleString()} ฿
+                            </span>
+                            <p class="text-[10px] text-gray-400">${isIn ? 'ฝากเข้า' : 'เบิกจ่าย'}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addGroupTransaction() {
+            const category = document.getElementById('groupCatInput').value;
+            const type = document.querySelector('input[name="groupTxType"]:checked').value;
+            const member = document.getElementById('groupMemberInput').value.trim();
+            const desc = document.getElementById('groupDescInput').value.trim();
+            const amount = parseFloat(document.getElementById('groupAmountInput').value);
+
+            if (!member || !desc || !amount || amount <= 0) {
+                showMagicToast('กรอกข้อมูลให้ครบถ้วน', 'ระบุชื่อสมาชิก เหตุผล และจำนวนเงินให้ครบนะคะ');
+                return;
+            }
+
+            const now = new Date();
+            const timeStr = 'วันนี้ ' + now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+            appState.groupTransactions.unshift({
+                id: 'g' + Date.now(),
+                category,
+                type,
+                member,
+                desc,
+                amount,
+                date: timeStr
+            });
+
+            document.getElementById('groupMemberInput').value = '';
+            document.getElementById('groupDescInput').value = '';
+            document.getElementById('groupAmountInput').value = '';
+
+            saveState();
+            renderGroupVault();
+            showMagicToast('บันทึกบัญชีกลุ่มสำเร็จ 👛', `บันทึกยอด ${type === 'in' ? 'ฝากเข้า' : 'เบิกใช้'} ${amount.toLocaleString()} บาท โปร่งใสเรียบร้อยค่ะ!`);
+        }
+
+        function renderAll() {
+            renderPage1();
+            renderPage2();
+            analyzeImpulseBuy();
+            renderPage4();
+            renderGroupVault();
+        }
+
+        window.onload = function() {
+            createBackgroundStars();
+            loadState();
+            renderAll();
+        };
+    </script>
+</body>
+</html>
